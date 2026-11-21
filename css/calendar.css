@@ -3,7 +3,8 @@
    PICTURE: 오늘 두 날짜 카드 + 월간 달력 자체
    COLOUR/TYPE: 현대=흰 바탕·잉크·신호 빨강, IBM Plex Sans KR / 판타지=깊은 자줏빛 밤·달빛 은색·불씨 산호, Gowun Batang
    LAYOUT: 제목+탭, 오늘 띠, 달력과 선택한 날 패널(좁으면 세로로) */
-:root{color-scheme:light dark;--bg:light-dark(#fff,#121417);--ink:light-dark(#16181c,#eceef2);--mute:light-dark(#5d636e,#9aa1ad);--line:light-dark(#e3e5ea,#2a2e35);--cell:light-dark(#f6f7f9,#1a1d22);--acc:#e6261f;--acc2:light-dark(#0a5cff,#5c95ff);--hd:'IBM Plex Sans KR',system-ui,sans-serif;--onacc:#fff}
+:root{color-scheme:light dark;--bg:#fff;--ink:#16181c;--mute:#5d636e;--line:#e3e5ea;--cell:#f6f7f9;--acc:#e6261f;--acc2:#0a5cff;--hd:'IBM Plex Sans KR',system-ui,sans-serif;--onacc:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--ink:#eceef2;--mute:#9aa1ad;--line:#2a2e35;--cell:#1a1d22;--acc2:#5c95ff}}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 body.fan{color-scheme:dark;--bg:#24131f;--ink:#efe9f2;--mute:#b6a6bb;--line:#45293d;--cell:#2f1a2a;--acc:#ff7a59;--acc2:#a9c4ff;--hd:'Gowun Batang',serif;--onacc:#24131f;background:radial-gradient(120% 60% at 85% -10%,#4b2442,transparent 60%),#24131f}
 *{box-sizing:border-box;min-width:0}
@@ -90,7 +91,8 @@ select{font:16px 'IBM Plex Sans KR',sans-serif;color:var(--ink);background:var(-
 .fl{margin-bottom:12px}
 h3.gh{margin:0;display:flex;align-items:center}
 .rt .ev{margin-bottom:6px}
-:root{--acc3:light-dark(#7a3ff0,#a98bff)}body.fan{--acc3:#f2c14e}
+:root{--acc3:#7a3ff0}
+@media (prefers-color-scheme:dark){:root{--acc3:#a98bff}}body.fan{--acc3:#f2c14e}
 .chip.plan{background:color-mix(in srgb,var(--acc3) 24%,transparent)}
 .dots i.c{background:var(--acc3)}
 .ev.plan{border-left:4px solid var(--acc3)}.tag.plan{color:var(--acc3)}
