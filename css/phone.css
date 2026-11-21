@@ -1,0 +1,140 @@
+/*
+VOICE: 조용하고 다정한 기록. 장식 없이 실제 아이폰 메시지 화면처럼.
+IDEA: 율리안의 휴대폰에 열린 '남편'과의 대화창.
+PICTURE: 대화창 자체가 그림. 데스크톱에서는 휴대폰 틀 안에, 폰에서는 화면 가득.
+COLOUR and TYPE: iMessage 파랑 #0a84ff / 회색 말풍선, 시스템 산세리프.
+LAYOUT: 상단 연락처 헤더, 날짜 구분선, 말풍선 꼬리는 묶음 마지막에만.
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#e9e7e3,#111);
+--screen:light-dark(#fff,#000);
+--ink:light-dark(#000,#fff);
+--sub:light-dark(#8a8a8e,#8d8d93);
+--gray:light-dark(#e9e9eb,#262628);
+--blue:#0a84ff;
+--bar:light-dark(rgba(249,249,249,.88),rgba(22,22,24,.88));
+--line:light-dark(#d6d6d8,#2c2c2e)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased}
+.stage{min-height:calc(100vh - 52px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px}
+.phone{width:min(400px,100%);height:min(860px,calc(100vh - 110px));background:var(--screen);border-radius:52px;border:11px solid #1c1c1e;box-shadow:0 0 0 2px #3a3a3c,0 30px 60px rgba(0,0,0,.25);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.status{display:flex;justify-content:space-between;align-items:center;padding:14px 30px 4px;font-size:15px;font-weight:600;position:relative;z-index:3;background:var(--bar)}
+.island{position:absolute;left:50%;top:9px;transform:translateX(-50%);width:112px;height:32px;border-radius:20px;background:#000}
+.sig{display:flex;gap:5px;align-items:center}
+.sig i{display:block;width:3px;background:var(--ink);border-radius:1px}
+.batt{width:25px;height:12px;border:1.5px solid var(--sub);border-radius:4px;padding:1.5px;position:relative}
+.batt b{display:block;height:100%;width:72%;background:var(--ink);border-radius:1.5px}
+header{background:var(--bar);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:.5px solid var(--line);padding:4px 12px 8px;display:grid;grid-template-columns:60px 1fr 60px;align-items:center;position:relative;z-index:2}
+.back{color:var(--blue);font-size:17px;display:flex;align-items:center;gap:2px}
+.back svg{width:12px;height:20px}
+.who{display:flex;flex-direction:column;align-items:center;gap:3px}
+.av{width:50px;height:50px;border-radius:50%;background:linear-gradient(#a5a9b4,#868a96);color:#fff;display:grid;place-items:center;font-size:21px;font-weight:500}
+.name{font-size:12px;display:flex;align-items:center;gap:2px}
+.name svg{width:6px;height:10px;opacity:.5}
+.video{justify-self:end;color:var(--blue)}
+.video svg{width:26px;height:18px}
+.chat{flex:1;overflow-y:auto;padding:6px 14px 18px;scroll-behavior:smooth}
+.chat::-webkit-scrollbar{display:none}
+.date{text-align:center;color:var(--sub);font-size:11px;margin:18px 0 8px;line-height:1.3}
+.date b{font-weight:600}
+.row{display:flex;margin-top:2px}
+.row.me{justify-content:flex-end}
+.row.gap{margin-top:9px}
+.b{max-width:76%;padding:7px 13px 8px;border-radius:19px;font-size:16.5px;line-height:1.3;position:relative;word-break:keep-all;overflow-wrap:anywhere}
+.me .b{background:var(--blue);color:#fff}
+.them .b{background:var(--gray);color:var(--ink)}
+.tail.me .b{border-bottom-right-radius:19px}
+.tail .b::before,.tail .b::after{content:"";position:absolute;bottom:0;height:20px}
+.tail.me .b::before{right:-7px;width:20px;background:var(--blue);border-bottom-left-radius:16px 14px}
+.tail.me .b::after{right:-26px;width:26px;background:var(--screen);border-bottom-left-radius:10px}
+.tail.them .b::before{left:-7px;width:20px;background:var(--gray);border-bottom-right-radius:16px 14px}
+.tail.them .b::after{left:-26px;width:26px;background:var(--screen);border-bottom-right-radius:10px}
+.read{text-align:right;color:var(--sub);font-size:11px;margin:3px 2px 0}
+.read b{font-weight:600}
+.call{display:flex;justify-content:center;margin:12px 0 6px}
+.call span{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
+.call svg{width:12px;height:12px}
+.call.miss span{color:#ff3b30}
+.comp{display:flex;align-items:center;gap:8px;padding:8px 12px 26px;background:var(--screen)}
+.plus{width:34px;height:34px;border-radius:50%;background:var(--gray);display:grid;place-items:center;flex:none;color:var(--sub);font-size:24px;line-height:1}
+.field{flex:1;height:36px;border:1px solid var(--line);border-radius:18px;padding:0 14px;display:flex;align-items:center;color:var(--sub);font-size:16px}
+.seg{display:flex;gap:2px;background:light-dark(#dcdad5,#222);padding:3px;border-radius:12px;margin-bottom:14px}
+.seg a{min-width:110px;text-align:center;padding:9px 14px;border-radius:9px;color:var(--ink);text-decoration:none;font-size:15px;font-weight:500}
+.seg a.on{background:var(--screen);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.view{display:none;flex:1;flex-direction:column;min-height:0}
+.view.on{display:flex}
+.sx{background:#000;color:#f2f2f2;font-family:"Samsung Sans","One UI Sans","Noto Sans KR","Apple SD Gothic Neo",system-ui,sans-serif}
+.phone.dk .status{background:#000;color:#fff}.phone.dk .sig i,.phone.dk .batt b{background:#fff}
+.sx-scroll{flex:1;overflow-y:auto;padding:0 10px 16px}
+.sx-scroll::-webkit-scrollbar{display:none}
+.sx-h1{font-size:30px;font-weight:600;margin:34px 8px 22px;letter-spacing:-.3px}
+.sx-day{font-size:14px;color:#a7a7ad;font-weight:600;margin:18px 14px 8px}
+.sx-card{background:#1c1c1e;border-radius:22px;overflow:hidden}
+.sx-row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;padding:13px 16px;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:58px}
+.sx-row+.sx-row,.sx-row+.sx-open,.sx-open+.sx-row{border-top:1px solid #2c2c2e}
+.sx-ic{display:grid;place-items:center;color:#b9b9be}.sx-ic svg{width:18px;height:18px}
+.sx-ic.red{color:#ff5a4f}
+.sx-nm{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sx-nm.red{color:#ff5a4f}
+.sx-r{text-align:right;color:#a7a7ad;font-size:13px;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.sx-r svg{width:14px;height:14px;color:#d0d0d4}
+.sx-open{background:#232325;padding:18px 18px 16px}
+.sx-open h3{margin:0 0 10px;font-size:22px;font-weight:600}
+.sx-meta{display:flex;justify-content:space-between;align-items:flex-start;color:#b9b9be;font-size:14px}
+.sx-meta p{margin:0 0 4px;display:flex;align-items:center;gap:6px}.sx-meta svg{width:16px;height:16px}
+.sx-meta .mic{width:24px;height:24px;color:#e5e5ea}
+.sx-pill{display:flex;justify-content:space-between;align-items:center;width:100%;margin:14px 0 4px;padding:11px 16px;border-radius:999px;background:linear-gradient(90deg,#26283a,#2b2f33);color:#eee;font:inherit;font-size:15px;border:1.5px solid #6f7fb8;box-shadow:0 0 14px rgba(140,160,255,.35),inset 0 0 6px rgba(160,255,220,.15);text-decoration:none}
+.sx-acts{display:flex;justify-content:space-around;margin-top:16px}
+.sx-acts span{width:46px;height:46px;border-radius:50%;background:#0d0d0e;display:grid;place-items:center;color:#cfd2d8}
+.sx-acts svg{width:20px;height:20px}
+.sx-btns{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px}
+.sx-btns span{background:#1c1c1e;text-align:center;padding:14px 0;font-size:15px;border-radius:0 0 0 18px}
+.sx-btns span+span{border-radius:0 0 18px 0}
+.sx-note{color:#7d7d83;font-size:12px;line-height:1.5;margin:18px 10px 0}
+.rc-top{display:grid;grid-template-columns:40px 1fr auto;align-items:center;padding:8px 12px 0;gap:6px}
+.rc-top a{color:#ddd;display:grid;place-items:center;height:44px}
+.rc-top svg{width:20px;height:20px}
+.rc-ti b{display:block;font-size:20px;font-weight:600}.rc-ti span{font-size:12px;color:#8e8e93}
+.rc-ico{display:flex;gap:14px;color:#ddd}
+.rc-body{flex:1;overflow-y:auto;padding:0 14px 16px}
+.rc-body::-webkit-scrollbar{display:none}
+.rc-sum{display:flex;flex-direction:column;align-items:center;margin:20px 0 22px}
+.rc-sum button{display:flex;align-items:center;gap:8px;padding:12px 34px;border-radius:999px;background:linear-gradient(90deg,#283048,#2e3a3a);color:#fff;font:inherit;font-size:16px;font-weight:600;border:1.5px solid #59648f;box-shadow:0 0 16px rgba(140,170,255,.3);cursor:pointer}
+.rc-sum button svg{width:18px;height:18px}
+.rc-sum h4{margin:16px 0 2px;font-size:15px;font-weight:600}
+.rc-sum small{font-size:11px;color:#8e8e93}
+.rc-sum ul{margin:12px 6px 0;padding:14px 16px 14px 30px;background:#1c1c1e;border-radius:16px;font-size:14px;line-height:1.55;color:#d6d6da;display:none;text-align:left}
+.rc-sum.open ul{display:block}
+.ln{display:flex;margin-top:6px}.ln.me{justify-content:flex-end}
+.ln.gap{margin-top:16px}
+.ln span{max-width:78%;padding:9px 15px;border-radius:20px;font-size:15.5px;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
+.ln.me span{background:#776a80;color:#fff}
+.ln.them span{background:#2c2730;color:#eee}
+.rc-pl{margin:0 10px 18px;background:#1c1c1e;border-radius:22px;padding:14px 16px 12px}
+.rc-bar{height:3px;background:#5a5a62;border-radius:2px;position:relative;margin:6px 4px}
+.rc-bar i{position:absolute;left:-6px;top:-6px;width:15px;height:15px;border-radius:50%;border:2px solid #ddd;background:#1c1c1e}
+.rc-t{display:flex;justify-content:space-between;font-size:12px;color:#a7a7ad;margin-top:8px}
+.rc-ctl{display:flex;justify-content:center;align-items:center;gap:52px;margin-top:6px;color:#bbb}
+.rc-ctl svg{width:20px;height:20px}
+.rc-ctl b{width:46px;height:46px;border-radius:50%;background:#fff;display:grid;place-items:center;color:#111}
+.note{text-align:center;color:var(--sub);font-size:13px;margin:14px 0 0;max-width:400px}
+@media(max-width:600px){
+ .stage{padding:8px 0 0;justify-content:flex-start}
+ .seg{margin-bottom:8px}
+ .phone{width:100%;height:calc(100dvh - 60px);border:0;border-radius:0;box-shadow:none}
+ .note{display:none}
+}
+/* daybook: 붙여넣기 도구 */
+.tools{width:min(400px,100%);display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;font-size:13px;color:var(--sub)}
+.tools button,#imp button{min-height:40px;border:1px solid var(--line);background:var(--screen);color:var(--ink);border-radius:10px;padding:0 14px;font:inherit;font-size:14px;cursor:pointer}
+#imp{background:var(--screen);color:var(--ink);border:1px solid var(--line);border-radius:16px;width:min(560px,94vw);padding:20px;max-height:90vh;overflow:auto}
+#imp::backdrop{background:#0008}
+#imp h3{margin:0 0 8px;font-size:20px}
+#imp .hint{font-size:14px;color:var(--sub);margin:0 0 10px}
+#imp textarea{width:100%;font:14px/1.4 ui-monospace,Menlo,monospace;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+#imp .err{color:#ff453a;font-size:14px;min-height:1.4em;margin:6px 0}
+#imp .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#imp .sp{flex:1}
+#imp button.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.empty-note{padding:40px 24px;text-align:center;color:var(--sub);font-size:15px}
+@media(max-width:600px){.tools{padding:0 16px 12px}}

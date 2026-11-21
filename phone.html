@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko" style="visibility:hidden">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>통화 · 문자</title>
+<link rel="stylesheet" href="css/phone.css">
+</head>
+<body>
+
+<div class="stage">
+ <div class="phone">
+  <div class="status">
+   <span id="clock"></span><span class="island" aria-hidden="true"></span>
+   <span class="sig" aria-hidden="true"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:10px"></i><span class="batt"><b></b></span></span>
+  </div>
+  <section class="view on" id="v-m">
+  <header>
+   <span class="back"><svg viewBox="0 0 12 20"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+   <div class="who"><div class="av">남</div><div class="name">남편<svg viewBox="0 0 6 10"><path d="m1 1 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></div></div>
+   <span class="video"><svg viewBox="0 0 26 18"><rect x="1" y="2" width="16" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m18 7 7-4v12l-7-4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+  </header>
+  <div class="chat" id="chat"></div>
+  <div class="comp"><span class="plus">+</span><span class="field">iMessage</span></div>
+  </section>
+  <section class="view sx" id="v-c">
+   <div class="sx-scroll">
+    <div class="sx-h1">전화</div>
+    <div id="sxlog"></div>
+    <p class="sx-note" id="sxnote"></p>
+   </div>
+  </section>
+  <section class="view sx" id="v-r">
+   <div class="rc-top"><a href="#calls" aria-label="뒤로"><svg viewBox="0 0 20 20"><path d="M13 3 6 10l7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></a><div class="rc-ti"><b>남편</b><span>통화 녹음</span></div><div class="rc-ico"><svg viewBox="0 0 20 20" width="20" height="20"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m13 13 5 5" stroke="currentColor" stroke-width="1.6"/></svg><svg viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="4" r="1.6" fill="currentColor"/><circle cx="10" cy="10" r="1.6" fill="currentColor"/><circle cx="10" cy="16" r="1.6" fill="currentColor"/></svg></div></div>
+   <div class="rc-body" id="rcbody"></div>
+   <div class="rc-pl"><div class="rc-bar"><i></i></div><div class="rc-t"><span>00:00</span><span id="rclen"></span></div><div class="rc-ctl"><svg viewBox="0 0 20 20"><path d="M10 4v12L2 10zM18 4v12l-8-6z" fill="currentColor"/></svg><b><svg viewBox="0 0 20 20"><path d="M6 3.5v13l11-6.5z" fill="currentColor"/></svg></b><svg viewBox="0 0 20 20"><path d="M10 4v12l8-6zM2 4v12l8-6z" fill="currentColor"/></svg></div></div>
+  </section>
+ </div>
+
+ <div class="tools"><span id="st" aria-live="polite"></span><button type="button" id="openimp">붙여넣기 · 백업</button></div>
+</div>
+<dialog id="imp"><form method="dialog" id="impf"><h3>붙여넣기 · 백업</h3>
+<p class="hint">Claude가 준 <b>[통화·문자 업데이트]</b> 블록을 붙여 넣으면 메시지·통화·녹음 뒤에 이어 붙여요. 백업 JSON 전체를 붙여 넣으면 지금 데이터 전체가 그 내용으로 바뀌어요.</p>
+<textarea id="impt" rows="8" spellcheck="false" aria-label="붙여넣기"></textarea>
+<p class="err" id="imperr"></p>
+<div class="acts"><button type="button" id="bkcopy">지금 데이터 백업 복사</button><span class="sp"></span><button type="button" id="impclose">닫기</button><button type="button" class="pri" id="impgo">반영하기</button></div>
+</form></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/phone.js"></script>
+</body>
+</html>
