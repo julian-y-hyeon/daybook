@@ -1,4 +1,4 @@
-// 통화 · 문자. 옛 아티팩트의 화면을 그대로 두고, 데이터를 Supabase docs 테이블의 phone 한 줄에서 읽는다.
+// 통화 · 문자. 옛 아티팩트의 화면을 그대로 두고, 데이터는 wolfheim 저장소 studio/daybook/phone.json에서 Edge Function으로 읽는다.
 (async () => {
 await DB.requireLogin();
 DB.nav();
@@ -7,12 +7,19 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const NOTE = '대화이력에서 옮긴 통화입니다. 시각이 기록에 없는 통화와 초 단위 통화 시간은 앞뒤 장면으로 추정했습니다. 녹음 대본에는 두 사람이 소리 내어 한 말만 담았습니다.';
 const EMPTY = { status: '', open: '', log: [], rec: {}, days: [] };
 const valid = o => !!(o && Array.isArray(o.log) && Array.isArray(o.days) && o.rec && typeof o.rec === 'object');
+const SRC = 'studio/daybook/phone.json';
 
-let P = JSON.parse(JSON.stringify(EMPTY)), loadErr = '';
-try { const row = await DB.loadDoc('phone'); if (row && valid(row.data)) P = row.data; }
-catch (e) { loadErr = '불러오지 못했어요: ' + (e.message || e); }
+let P = JSON.parse(JSON.stringify(EMPTY)), msg = '';
+try {
+ const res = await DB.readRepo([SRC]);
+ const tx = res.files && res.files[SRC];
+ if (typeof tx !== 'string') throw new Error((res.errors && res.errors[SRC]) || '파일이 없어요');
+ const o = JSON.parse(tx);
+ if (!valid(o)) throw new Error('phone.json 형식이 맞지 않아요');
+ P = o;
+} catch (e) { msg = '불러오지 못했어요: ' + (e.message || e); }
 const setStatus = s => { $('#st').textContent = s; };
-setStatus(loadErr || (P.log.length ? '' : '저장된 기록이 없어요 · 붙여넣기에서 백업을 불러오세요'));
+setStatus(msg);
 
 const SV = {
  out:'<svg viewBox="0 0 18 18"><path d="M4 14 14 4M6 4h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -88,64 +95,5 @@ addEventListener('hashchange', show);
 addEventListener('load', toEnd);
 renderAll();
 
-/* 저장 */
-let saving = Promise.resolve();
-function commit(msg) {
- renderAll();
- if (loadErr) { setStatus('처음에 불러오지 못해서 저장하지 않았어요 · 새로고침해 주세요'); return; }
- setStatus('저장 중…');
- const snap = JSON.parse(JSON.stringify(P));
- saving = saving.then(() => DB.saveDoc('phone', snap)).then(() => setStatus(msg ? msg + ' 저장됨.' : '저장됨'), e => setStatus('저장 실패: ' + (e.message || e)));
-}
 
-/* 붙여넣기: [통화·문자 업데이트] 블록은 이어 붙이고, 백업 JSON은 통째로 바꾼다 */
-const HEAD = '[통화·문자 업데이트]';
-function jsonOf(tx) {
- if (tx.includes(HEAD)) tx = tx.split(HEAD)[1].split('[끝]')[0];
- const a = tx.indexOf('{'), b = tx.lastIndexOf('}');
- if (a < 0 || b < a) throw new Error('JSON을 찾지 못했어요.');
- try { return JSON.parse(tx.slice(a, b + 1)); } catch (e) { throw new Error('JSON 형식이 맞지 않아요: ' + e.message); }
-}
-function mergeUpdate(u) {
- const N = JSON.parse(JSON.stringify(P));
- const log = Array.isArray(u.log) ? u.log : [];
- const seen = new Set(N.log.filter(m => m.d).map(m => m.d + '|' + (m.tm || '')));
- for (const m of log) if (m.d && seen.has(m.d + '|' + (m.tm || ''))) throw new Error(`이미 들어간 구분선이 있어요: ${m.d} ${m.tm || ''}. 같은 블록을 두 번 붙여 넣은 건 아닌지 확인해 주세요.`);
- if (log.some(m => m.read)) for (const m of N.log) delete m.read;
- N.log.push(...log);
- for (const [k, r] of Object.entries(u.rec || {})) {
-  if (N.rec[k]) throw new Error(`녹음 ${k}번이 이미 있어요.`);
-  if (!r || !r.title || !Array.isArray(r.t)) throw new Error(`녹음 ${k}번에 title이나 t가 없어요.`);
-  N.rec[k] = r;
- }
- const ids = new Set(N.days.flatMap(g => (g.c || []).map(c => c.id)));
- const calls = Array.isArray(u.calls) ? u.calls : [];
- let nc = 0;
- for (const g of calls.slice().reverse()) {
-  const cs = (g.c || []).map(c => { let id = c.id; while (!id || ids.has(id)) id = 'c' + Math.random().toString(36).slice(2, 8); ids.add(id); nc++; return { ...c, id }; });
-  const old = N.days.find(x => x.d === g.d);
-  if (old) old.c = [...cs, ...(old.c || [])]; else N.days.unshift({ d: g.d, c: cs });
- }
- if (u.status) N.status = u.status;
- if (u.open) N.open = u.open;
- if (u.note) N.note = u.note;
- return [N, `메시지·통화 ${log.length}줄, 통화 기록 ${nc}개, 녹음 ${Object.keys(u.rec || {}).length}개를 이어 붙였어요.`];
-}
-$('#openimp').addEventListener('click', () => { $('#impt').value = ''; $('#imperr').textContent = ''; $('#imp').showModal(); });
-$('#impclose').addEventListener('click', () => $('#imp').close());
-$('#impgo').addEventListener('click', () => {
- try {
-  const tx = $('#impt').value, o = jsonOf(tx);
-  let msg;
-  if (tx.includes(HEAD)) [P, msg] = mergeUpdate(o);
-  else if (valid(o)) { P = o; msg = '백업 전체를 불러왔어요.'; }
-  else throw new Error('[통화·문자 업데이트] 블록도, 백업 JSON도 아니에요.');
-  $('#imp').close(); commit(msg);
- } catch (e) { $('#imperr').textContent = e.message || '읽지 못했어요.'; }
-});
-$('#bkcopy').addEventListener('click', async () => {
- const t = JSON.stringify(P);
- try { await navigator.clipboard.writeText(t); $('#imperr').textContent = '복사했어요.'; }
- catch (e) { $('#impt').value = t; $('#impt').select(); $('#imperr').textContent = '자동 복사가 막혀 있어요. 선택된 텍스트를 직접 복사해 주세요.'; }
-});
 })();

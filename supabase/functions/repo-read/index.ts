@@ -11,6 +11,8 @@ const ALLOW = new Set([
   'story-modern/memory/레이너_최근기억.md',
   'story/memory/레이너_고정기억.md',
   'story-modern/memory/레이너_고정기억.md',
+  'studio/daybook/calendar.md',
+  'studio/daybook/phone.json',
 ]);
 const ORIGINS = ['https://julian-y-hyeon.github.io'];
 

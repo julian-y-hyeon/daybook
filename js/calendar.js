@@ -129,8 +129,8 @@ function ltmKey(w,s){
   if(r=s.match(/^(\d+)월\s*(\d+)일$/)||s.match(/^(\d+)\/(\d+)$/)){const m=+r[1];return[mk(yOf(m),m,+r[2]),'']}
   return['미정','날짜: '+s];
 }
-function applyLtm(o){
-  const ws=[...new Set(o.items.map(i=>i.w))];
+function applyLtm(o,all){
+  const ws=all?['modern','fantasy']:[...new Set(o.items.map(i=>i.w))];
   for(const w of ws){const E=S.events[w];for(const k of Object.keys(E)){E[k]=E[k].filter(e=>e.src!=='ltm');if(!E[k].length)delete E[k]}}
   for(const i of o.items){
     const[k,lab]=ltmKey(i.w,i.date),E=S.events[i.w];
@@ -142,21 +142,22 @@ function applyLtm(o){
 }
 
 /* GitHub 커넥터로 최근기억 직접 읽기 (읽기만 함) */
-const GH={files:[['modern','story-modern/memory/레이너_최근기억.md','board'],['fantasy','story/memory/레이너_최근기억.md','board'],['modern','story-modern/memory/레이너_고정기억.md','sun'],['fantasy','story/memory/레이너_고정기억.md','sun']]};
+const GH={files:[['modern','story-modern/memory/레이너_최근기억.md','board'],['fantasy','story/memory/레이너_최근기억.md','board'],['modern','story-modern/memory/레이너_고정기억.md','sun'],['fantasy','story/memory/레이너_고정기억.md','sun'],['all','studio/daybook/calendar.md','ltm']]};
 let ghMsg='GitHub 최근기억 확인 중…',ghBusy=false,ghRetry=false;
 const setGh=(m,retry)=>{ghMsg=m;ghRetry=!!retry;const e=$('#gh');if(e)e.innerHTML=ghHTML()};
 const ghHTML=()=>`<span>${esc(ghMsg)}</span>${ghBusy?'':`<button class="btn" id="ghgo">${ghRetry?'다시 시도':'다시 불러오기'}</button>`}`;
 async function syncGitHub(byUser){
-  if(ghBusy)return;ghBusy=true;setGh('GitHub 최근기억 읽는 중…');
+  if(ghBusy)return;ghBusy=true;setGh('GitHub 최근기억·장기기억 계획 읽는 중…');
   let res;
   try{res=await DB.readRepo(GH.files.map(f=>f[1]))}
   catch(e){ghBusy=false;setGh('GitHub에서 읽지 못했어요: '+(e.message||e),true);return}
   const got=[],errs=[];let changed=false;
   for(const[w,path,kind]of GH.files){
-    const wn=w==='modern'?'현대':'판타지';
+    const wn=w==='all'?'장기기억 계획':w==='modern'?'현대':'판타지';
     const tx=res.files&&res.files[path];
     if(typeof tx!=='string'){errs.push(wn+(kind==='sun'?' 고정기억':'')+': '+((res.errors&&res.errors[path])||'파일이 없어요'));continue}
     try{
+      if(kind==='ltm'){if(tx!==S.ltmSrc){applyLtm(parseLtm(tx),true);S.ltmSrc=tx;changed=true;got.push('장기기억 계획 새로 반영')}continue}
       if(kind==='sun'){const o=parseSun(tx);if(JSON.stringify(o)!==JSON.stringify(S[w].sun||null)){S[w].sun=o;changed=true;got.push(wn+' 해 시각 새로 반영')}continue}
       const o=parseBoard(tx);if(o.w!==w)throw new Error('세계가 맞지 않아요');
       if(S[w].sig!==o.sig){applyBoard(o,true);changed=true;got.push(wn+' 새로 반영')}else got.push(wn+' 그대로')}
@@ -231,7 +232,7 @@ document.body.insertAdjacentHTML('beforeend',`
 <label>메모<textarea name="note" rows="3"></textarea></label><p class="err" id="ederr"></p>
 <div class="acts"><button type="button" class="btn danger" id="del">삭제</button><span class="sp"></span><button type="button" class="btn" id="cancel">취소</button><button class="btn pri" type="submit">저장</button></div></form></dialog>
 <dialog id="sd"><form id="sdf"><h3>설정·최근기억</h3>
-<fieldset><legend>붙여넣기</legend><p class="hint">다른 채팅에서 받은 <b>[볼프하임 캘린더 업데이트]</b> 블록을 붙여 넣으면 장기기억 항목을 새로 맞춰요(그 블록에 있는 세계의 장기기억 항목만 바뀌어요). 평소에는 페이지를 열 때 GitHub에서 알아서 읽어 와요(Edge Function을 거쳐 읽기만 해요). GitHub를 못 읽을 때만 이걸 쓰세요. 저장소의 <b>story/memory/레이너_최근기억.md</b>(판타지)나 <b>story-modern/memory/레이너_최근기억.md</b>(현대)의 상태판을 붙여 넣으세요. 날짜를 보고 어느 세계인지 알아서 고르고, 지금 날짜·위치·다가오는 일정을 바꿔요. 전에 최근기억에서 가져온 일정은 새 것으로 바뀌고, 직접 넣은 일정은 그대로 남아요.</p>
+<fieldset><legend>붙여넣기</legend><p class="hint">장기기억 계획은 저장소 <b>studio/daybook/calendar.md</b>에서 알아서 읽어 와요. 급할 때만 <b>[볼프하임 캘린더 업데이트]</b> 블록을 붙여 넣으세요(그 블록에 있는 세계의 장기기억 항목만 바뀌고, 다음에 calendar.md가 바뀌면 그 내용으로 다시 맞춰져요). 평소에는 페이지를 열 때 GitHub에서 알아서 읽어 와요(Edge Function을 거쳐 읽기만 해요). GitHub를 못 읽을 때만 이걸 쓰세요. 저장소의 <b>story/memory/레이너_최근기억.md</b>(판타지)나 <b>story-modern/memory/레이너_최근기억.md</b>(현대)의 상태판을 붙여 넣으세요. 날짜를 보고 어느 세계인지 알아서 고르고, 지금 날짜·위치·다가오는 일정을 바꿔요. 전에 최근기억에서 가져온 일정은 새 것으로 바뀌고, 직접 넣은 일정은 그대로 남아요.</p>
 <textarea id="mem" rows="5" spellcheck="false" aria-label="최근기억 붙여넣기" placeholder="- 현재 스토리 날짜·시각: …&#10;- 다가오는 일정: …"></textarea>
 <div class="acts" style="margin-top:8px"><button type="button" class="btn pri" id="memgo">반영하기</button><span class="hint" id="memm" style="margin:0"></span></div></fieldset>
 <fieldset><legend>현대</legend><div class="two"><label>지금 이야기 날짜<input type="date" name="mDate" required></label><label>시각<input name="mTime" placeholder="20:55"></label></div><label>위치·시간대<input name="mWhere"></label></fieldset>
