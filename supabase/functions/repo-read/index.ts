@@ -1,7 +1,7 @@
 // 비공개 저장소 julian-y-hyeon/wolfheim main에서 정해 둔 파일만 읽어 돌려준다. 저장소를 고치지 않는다.
 // 비밀값(Edge Functions → Secrets): GH_TOKEN(Contents 읽기 전용 fine-grained 토큰), OWNER_UID(관리자 UID)
 // SUPABASE_URL, SUPABASE_ANON_KEY는 Supabase가 넣어 준다.
-import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
+import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 
 const OWNER = 'julian-y-hyeon';
 const REPO = 'wolfheim';
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? '';
   const token = auth.replace(/^Bearer\s+/i, '');
   if (!token) return json(req, { error: '로그인이 필요해요' }, 401);
-  const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
+  const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const { data: u, error: ue } = await sb.auth.getUser(token);
   if (ue || !u?.user) return json(req, { error: '로그인이 만료됐어요. 다시 로그인해 주세요' }, 401);
   if (u.user.id !== Deno.env.get('OWNER_UID')) return json(req, { error: '권한이 없어요' }, 403);
