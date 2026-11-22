@@ -36,6 +36,7 @@ const posOf=k=>{const p=k.split('-').map(Number);return{y:p[0],m:p[1],sel:k}};
 let V={world:location.hash==='#fantasy'?'fantasy':'modern',mode:'cal',q:''};
 V.modern=posOf(todayKey('modern'));V.fantasy=posOf(todayKey('fantasy'));
 V.cat=V.cat||'all';
+try{V.hideDone=localStorage.getItem('daybook.hideDone')==='1'}catch(e){V.hideDone=false}
 
 /* 저장: Supabase docs 테이블의 calendar 한 줄 */
 let status=loadErr||(fresh?'저장된 일정이 없어요 · 설정의 백업 칸에 옛 캘린더 백업을 붙여 넣어 불러오세요':'불러왔어요');
@@ -81,17 +82,30 @@ function applyBoard(o,keep){
   if(w==='fantasy'){if(o.m>X.months.length)throw new Error(`${o.m}월이 판타지 달 목록에 없어요.`);Object.assign(X,{era:o.era,y:o.y,m:o.m,d:o.d})}
   else X.date=mKey(o.y,o.m,o.d);
   Object.assign(X,{time:o.time,where:o.where,routines:o.routines,sig:o.sig,synced:new Date().toISOString().slice(0,10)});
-  const E=S.events[w];
+  // 최근기억 일정은 지우지 않고 제목으로 맞춰 본다. 새 목록에 없는 것은 "목록에서 빠짐"(gone)으로 남긴다.
+  const E=S.events[w],nt=t=>String(t||'').replace(/\s+/g,''),old=[];
+  for(const[k,a]of Object.entries(E))for(const e of a)if(e.src==='mem')old.push({k,e});
   for(const k of Object.keys(E)){E[k]=E[k].filter(e=>e.src!=='mem');if(!E[k].length)delete E[k]}
-  for(const e of o.events){
+  const put=(k,e)=>(E[k]||(E[k]=[])).push(e);
+  const slots=o.events.map(e=>{
     const y=o.y+(e.mm<o.m-6?1:0);
     const len=w==='modern'?mDays(y,e.mm):(X.months[e.mm-1]||[0,30])[1];
     const d=e.dd==='end'?len:Math.min(e.dd,len);
-    const k=w==='modern'?mKey(y,e.mm,d):`${y}-${e.mm}-${d}`;
-    (E[k]||(E[k]=[])).push({id:Math.random().toString(36).slice(2,9),title:e.title,time:e.time,place:'',who:'',note:e.note,src:'mem'});
+    return{e,k:w==='modern'?mKey(y,e.mm,d):`${y}-${e.mm}-${d}`};
+  });
+  const used=new Set(),hit=new Map();
+  const take=(s,f)=>{const m=old.find(x=>!used.has(x)&&nt(x.e.title)===nt(s.e.title)&&f(x));if(m){used.add(m);hit.set(s,m)}};
+  for(const s of slots)take(s,x=>x.k===s.k);
+  for(const s of slots)if(!hit.has(s))take(s,x=>!x.e.done);
+  for(const s of slots){
+    const m=hit.get(s),f={title:s.e.title,time:s.e.time,note:s.e.note};
+    if(m){Object.assign(m.e,f);delete m.e.gone;put(s.k,m.e)}
+    else put(s.k,{id:Math.random().toString(36).slice(2,9),...f,place:'',who:'',src:'mem'});
   }
+  const day=new Date(),today=`${day.getFullYear()}-${pad(day.getMonth()+1)}-${pad(day.getDate())}`;let gone=0;
+  for(const x of old)if(!used.has(x)){if(!x.e.done){if(!x.e.gone)x.e.gone=today;gone++}put(x.k,x.e)}
   V[w]=posOf(todayKey(w));if(!keep)V.world=w;
-  return `${w==='modern'?'현대':'판타지'}: ${label(w,todayKey(w))}${o.time?' '+o.time:''}, 일정 ${o.events.length}개, 매일 할 일 ${o.routines.length}개를 반영했어요.`;
+  return `${w==='modern'?'현대':'판타지'}: ${label(w,todayKey(w))}${o.time?' '+o.time:''}, 일정 ${o.events.length}개, 매일 할 일 ${o.routines.length}개를 반영했어요.`+(gone?` 목록에서 빠진 일정 ${gone}개는 지우지 않고 남겨 뒀어요.`:'');
 }
 
 /* 해 뜸~짐: 고정기억 "북부 월별 날씨" */
@@ -145,7 +159,8 @@ function applyLtm(o,all){
 const GH={files:[['modern','story-modern/memory/레이너_최근기억.md','board'],['fantasy','story/memory/레이너_최근기억.md','board'],['modern','story-modern/memory/레이너_고정기억.md','sun'],['fantasy','story/memory/레이너_고정기억.md','sun'],['all','studio/daybook/calendar.md','ltm']]};
 let ghMsg='GitHub 최근기억 확인 중…',ghBusy=false,ghRetry=false;
 const setGh=(m,retry)=>{ghMsg=m;ghRetry=!!retry;const e=$('#gh');if(e)e.innerHTML=ghHTML()};
-const ghHTML=()=>`<span>${esc(ghMsg)}</span>${ghBusy?'':`<button class="btn" id="ghgo">${ghRetry?'다시 시도':'다시 불러오기'}</button>`}`;
+const goneN=()=>['modern','fantasy'].reduce((n,w)=>n+Object.values(S.events[w]).flat().filter(isGone).length,0);
+const ghHTML=()=>`<span>${esc(ghMsg)}</span>${(n=>n?`<span class="gonen">목록에서 빠진 일정 ${n}개 · 완료로 확정하거나 지워 주세요</span>`:'')(goneN())}${ghBusy?'':`<button class="btn" id="ghgo">${ghRetry?'다시 시도':'다시 불러오기'}</button>`}`;
 async function syncGitHub(byUser){
   if(ghBusy)return;ghBusy=true;setGh('GitHub 최근기억·장기기억 계획 읽는 중…');
   let res;
@@ -176,10 +191,12 @@ const moonIcon='<svg viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="
 
 /* 렌더 */
 const evs=(w,k)=>(S.events[w][k]||[]).slice().sort((a,b)=>(a.time||'~').localeCompare(b.time||'~'));
-const isL=e=>e.cat==='ltm',isP=e=>e.cat==='plan',isDone=e=>isL(e)&&e.status==='추가함';
+const isL=e=>e.cat==='ltm',isP=e=>e.cat==='plan',isFin=e=>!!e.done,isGone=e=>!!e.gone&&!e.done,isDone=e=>isFin(e)||isL(e)&&e.status==='추가함';
 function evBtn(w,k,e){const meta=[isL(e)&&e.dest&&'들어갈 곳 '+e.dest,isL(e)&&e.codes,e.place&&'장소 '+e.place,e.who&&'인물 '+e.who,e.note,isL(e)&&e.basis&&'근거 '+e.basis].filter(Boolean).map(esc).join(' · ');
   const tag=isL(e)?`<span class="tag ltm">장기기억 · ${esc(e.status||'추가 예정')}</span>`:isP(e)?'<span class="tag plan">챙길 일정</span>':e.src==='mem'?'<span class="tag">최근기억</span>':'';
-  return `<button class="ev${isL(e)?' ltm':''}${isP(e)?' plan':''}${isDone(e)?' done':''}" data-edit="${esc(e.id)}" data-k="${esc(k)}"><span class="t">${esc(e.time||(k==='미정'?'미정':'종일'))}</span><span><b>${esc(e.title)}</b>${tag}${meta?`<small>${meta}</small>`:''}</span></button>`}
+  const st=isFin(e)?'<span class="tag fin">완료</span>':isGone(e)?`<span class="tag gone">목록에서 빠짐 · ${esc(e.gone)}</span>`:'';
+  return `<button class="ev${isL(e)?' ltm':''}${isP(e)?' plan':''}${isDone(e)?' done':''}${isGone(e)?' gone':''}" data-edit="${esc(e.id)}" data-k="${esc(k)}"><span class="t">${esc(e.time||(k==='미정'?'미정':'종일'))}</span><span><b>${isFin(e)?'✓ ':''}${esc(e.title)}</b>${tag}${st}${meta?`<small>${meta}</small>`:''}</span></button>`}
+const evRow=(w,k,e)=>evBtn(w,k,e)+(isGone(e)?`<button class="btn fin" data-fin="${esc(e.id)}" data-k="${esc(k)}">완료로 확정</button>`:'');
 function calHTML(){
   const w=V.world,P=V[w],tk=todayKey(w);let head,cols,cells=[];
   if(w==='modern'){cols=7;head=MW;const nd=mDays(P.y,P.m);
@@ -187,22 +204,22 @@ function calHTML(){
   else{head=F().weekdays;cols=head.length||7;const nd=F().months[P.m-1][1];
     for(let i=0;i<fWd(fSer(P.y,P.m,1));i++)cells.push(null);for(let d=1;d<=nd;d++)cells.push({k:`${P.y}-${P.m}-${d}`,d})}
   const cell=c=>{if(!c)return '<span class="blank"></span>';const E=evs(w,c.k);
-    return `<button class="day${c.k===tk?' now':''}${c.k===P.sel?' sel':''}" data-day="${c.k}" aria-label="${esc(label(w,c.k))}${c.k===tk?', 지금 이야기 날짜':''}, 일정 ${E.length}개"><span class="n">${c.d}</span>${E.slice(0,2).map(e=>`<span class="chip${isL(e)?' ltm':''}${isP(e)?' plan':''}${isDone(e)?' done':''}">${esc(e.title)}</span>`).join('')}${E.length>2?`<span class="more">+${E.length-2}</span>`:''}${E.length?`<span class="dots">${E.slice(0,3).map(e=>`<i${isL(e)?' class="l"':isP(e)?' class="c"':''}></i>`).join('')}</span>`:''}</button>`};
-  return `<section class="cal" style="--cols:${cols}">${head.length?`<div class="wd">${head.map(h=>`<span>${esc(h)}</span>`).join('')}</div>`:''}<div class="grid">${cells.map(cell).join('')}</div><p class="legend"><span><i class="lg p"></i>플레이 일정</span><span><i class="lg c"></i>플레이어가 챙길 일정</span><span><i class="lg l"></i>장기기억에 넣을 것</span><span><i class="lg d"></i>장기기억에 넣음</span></p></section>`;
+    return `<button class="day${c.k===tk?' now':''}${c.k===P.sel?' sel':''}" data-day="${c.k}" aria-label="${esc(label(w,c.k))}${c.k===tk?', 지금 이야기 날짜':''}, 일정 ${E.length}개"><span class="n">${c.d}</span>${E.slice(0,2).map(e=>`<span class="chip${isL(e)?' ltm':''}${isP(e)?' plan':''}${isDone(e)?' done':''}${isGone(e)?' gone':''}">${isFin(e)?'✓ ':''}${esc(e.title)}</span>`).join('')}${E.length>2?`<span class="more">+${E.length-2}</span>`:''}${E.length?`<span class="dots">${E.slice(0,3).map(e=>`<i${isL(e)?' class="l"':isP(e)?' class="c"':''}></i>`).join('')}</span>`:''}</button>`};
+  return `<section class="cal" style="--cols:${cols}">${head.length?`<div class="wd">${head.map(h=>`<span>${esc(h)}</span>`).join('')}</div>`:''}<div class="grid">${cells.map(cell).join('')}</div><p class="legend"><span><i class="lg p"></i>플레이 일정</span><span><i class="lg c"></i>플레이어가 챙길 일정</span><span><i class="lg l"></i>장기기억에 넣을 것</span><span><i class="lg d"></i>장기기억에 넣음</span><span><i class="lg f">✓</i>완료</span><span><i class="lg g"></i>목록에서 빠짐</span></p></section>`;
 }
 function sideHTML(){
   const w=V.world,X=S[w],k=V[w].sel,E=evs(w,k),isNow=k===todayKey(w);
   return `<aside class="side"><h3>${esc(label(w,k))}</h3>${sunOf(w,k)?`<p class="sun">${esc(sunTxt(w,k))}</p>`:''}<p class="corr">${isNow?`지금 이야기 날짜${X.time?' · '+esc(X.time):''}${X.where?'<br>'+esc(X.where):''}`:sortVal(w,k)<sortVal(w,todayKey(w))?'지나간 날':'다가올 날'}</p>
-  <ul class="evl">${E.length?E.map(e=>`<li>${evBtn(w,k,e)}</li>`).join(''):'<li class="empty">이 날은 아직 일정이 없어요.</li>'}</ul><button class="btn pri" id="add">+ 일정 추가</button>
-  ${(U=>U.length?`<div class="rt"><h4>날짜 미정</h4>${U.map(e=>evBtn(w,'미정',e)).join('')}</div>`:'')(evs(w,'미정'))}
+  <ul class="evl">${E.length?E.map(e=>`<li>${evRow(w,k,e)}</li>`).join(''):'<li class="empty">이 날은 아직 일정이 없어요.</li>'}</ul><button class="btn pri" id="add">+ 일정 추가</button>
+  ${(U=>U.length?`<div class="rt"><h4>날짜 미정</h4>${U.map(e=>evRow(w,'미정',e)).join('')}</div>`:'')(evs(w,'미정'))}
   ${X.routines&&X.routines.length?`<div class="rt"><h4>매일</h4><ul>${X.routines.map(r=>`<li>${esc(r)}</li>`).join('')}</ul></div>`:''}</aside>`;
 }
 function listItems(){
   const w=V.world,q=V.q.trim().toLowerCase(),tk=todayKey(w);
-  const okc=e=>V.cat==='all'||(V.cat==='ltm'?isL(e):V.cat==='plan'?isP(e):!isL(e)&&!isP(e));
+  const okc=e=>!(V.hideDone&&isFin(e))&&(V.cat==='all'||(V.cat==='ltm'?isL(e):V.cat==='plan'?isP(e):!isL(e)&&!isP(e)));
   const groups=Object.entries(S.events[w]).map(([k,a])=>[k,a.filter(e=>okc(e)&&(!q||[e.title,e.who,e.place,e.note,e.codes,e.dest,e.basis].join(' ').toLowerCase().includes(q)))]).filter(g=>g[1].length).sort((a,b)=>sortVal(w,a[0])-sortVal(w,b[0]));
   if(!groups.length)return `<p class="empty">${q?'검색 결과가 없어요.':'아직 일정이 없어요. 달력에서 날짜를 눌러 추가해 보세요.'}</p>`;
-  return groups.map(([k,a])=>`<div class="grp">${k==='미정'?`<h3 class="gh">날짜 미정</h3>`:`<button class="gh" data-jump="${esc(k)}">${esc(label(w,k))}${k===tk?' · 지금':''}</button>`}${a.sort((x,y)=>(x.time||'~').localeCompare(y.time||'~')).map(e=>evBtn(w,k,e)).join('')}</div>`).join('');
+  return groups.map(([k,a])=>`<div class="grp">${k==='미정'?`<h3 class="gh">날짜 미정</h3>`:`<button class="gh" data-jump="${esc(k)}">${esc(label(w,k))}${k===tk?' · 지금':''}</button>`}${a.sort((x,y)=>(x.time||'~').localeCompare(y.time||'~')).map(e=>evRow(w,k,e)).join('')}</div>`).join('');
 }
 function tcard(x,w){const X=S[x];return `<button class="tcard${w===x?' on':''}" data-w="${x}" data-today="1">${x==='modern'?cityIcon:moonIcon}<span><small>${x==='modern'?'현대':'판타지'} · 지금 이야기 날짜</small><b>${esc(label(x,todayKey(x)))}${X.time?' '+esc(X.time):''}</b>${X.where?`<span class="where">${esc(X.where)}</span>`:''}${sunOf(x,todayKey(x))?`<span class="sun">${esc(sunTxt(x,todayKey(x)))}</span>`:''}</span></button>`}
 function render(){
@@ -217,7 +234,7 @@ function render(){
   <p class="ghline" id="gh" aria-live="polite">${ghHTML()}</p>
   <div class="bar"><div class="nav"><button class="ic" data-nav="-1" aria-label="이전 달">‹</button><h2>${esc(title)}</h2><button class="ic" data-nav="1" aria-label="다음 달">›</button><button class="btn" data-nav="0">지금</button></div>
   <div class="seg"><button data-mode="cal" aria-pressed="${V.mode==='cal'}">달력</button><button data-mode="list" aria-pressed="${V.mode==='list'}">연표</button><button class="btn" id="set">설정·최근기억</button></div></div>
-  <div class="main${V.mode==='list'?' one':''}">${V.mode==='cal'?calHTML()+sideHTML():`<section class="list"><div class="seg fl">${[['all','전체'],['play','플레이 일정'],['plan','챙길 일정'],['ltm','장기기억']].map(([c,n])=>`<button data-cat="${c}" aria-pressed="${V.cat===c}">${n}</button>`).join('')}</div><input id="q" type="search" placeholder="제목, 인물, 장소, 메모로 검색" aria-label="일정 검색" value="${esc(V.q)}"><div id="lst">${listItems()}</div></section>`}</div>
+  <div class="main${V.mode==='list'?' one':''}">${V.mode==='cal'?calHTML()+sideHTML():`<section class="list"><div class="seg fl">${[['all','전체'],['play','플레이 일정'],['plan','챙길 일정'],['ltm','장기기억']].map(([c,n])=>`<button data-cat="${c}" aria-pressed="${V.cat===c}">${n}</button>`).join('')}<button data-hide="1" aria-pressed="${!!V.hideDone}">완료 숨기기</button></div><input id="q" type="search" placeholder="제목, 인물, 장소, 메모로 검색" aria-label="일정 검색" value="${esc(V.q)}"><div id="lst">${listItems()}</div></section>`}</div>
   <footer class="foot"><span id="st">${esc(status)}</span>${syn?` · 최근기억 반영: ${esc(syn)}`:''}</footer></div>`;
 }
 
@@ -226,6 +243,7 @@ document.body.insertAdjacentHTML('beforeend',`
 <dialog id="ed"><form id="edf"><h3 id="edh"></h3><p class="corr" id="edd"></p>
 <label>제목<input name="title" required maxlength="160"></label>
 <div class="two"><label>범주<select name="cat"><option value="play">플레이 일정</option><option value="plan">플레이어가 챙길 일정</option><option value="ltm">장기기억에 넣을 것</option></select></label><label>날짜<input name="date" autocomplete="off"></label></div>
+<label class="chk" id="donef"><input type="checkbox" name="done"> 완료</label>
 <div id="ltmf"><div class="two"><label>상태<select name="status"><option>추가 예정</option><option>추가함</option></select></label><label>번호<input name="codes" placeholder="S167·P167a"></label></div><label>들어갈 곳<input name="dest"></label><label>근거<input name="basis"></label></div>
 <div class="two"><label>시간<input name="time" placeholder="예: 14:00, 저녁"></label><label>장소<input name="place"></label></div>
 <label>인물<input name="who" placeholder="쉼표로 구분"></label>
@@ -251,11 +269,12 @@ let edCtx=null,delArm=false;
 function openEd(k,id){
   const w=V.world,ev=id?(S.events[w][k]||[]).find(e=>e.id===id):null,f=$('#edf');
   edCtx={w,k,id:ev?ev.id:null};delArm=false;
-  $('#edh').textContent=ev?'일정 고치기':'새 일정';$('#edd').textContent=label(w,k)+(ev&&ev.src==='ltm'?' · 다음에 장기기억 블록을 붙여 넣으면 새 내용으로 바뀌어요':'')+(ev&&ev.src==='mem'?' · 고치면 직접 넣은 일정이 돼서, 다음 최근기억 반영 때 지워지지 않아요':'');
+  $('#edh').textContent=ev?'일정 고치기':'새 일정';$('#edd').textContent=label(w,k)+(ev&&ev.src==='ltm'?' · 다음에 장기기억 블록을 붙여 넣으면 새 내용으로 바뀌어요':'')+(ev&&ev.src==='mem'?' · 고치면 직접 넣은 일정이 돼서 다음 최근기억 반영 때 맞춰 보지 않아요(완료 체크만 바꾸면 그대로예요)':'')+(ev&&isGone(ev)?` · ${ev.gone}에 최근기억 목록에서 빠졌어요`:'');
   for(const n of['title','time','place','who','note','codes','dest','basis'])fe(f,n).value=ev?(ev[n]||''):'';
   fe(f,'cat').value=ev&&isL(ev)?'ltm':ev&&isP(ev)?'plan':'play';fe(f,'status').value=ev&&ev.status==='추가함'?'추가함':'추가 예정';
   fe(f,'date').value=k==='미정'?'':k;fe(f,'date').placeholder=(w==='modern'?'2026-08-25':'1123-11-7')+' · 비우면 날짜 미정';
-  $('#ltmf').style.display=fe(f,'cat').value==='ltm'?'':'none';$('#ederr').textContent='';
+  fe(f,'done').checked=!!(ev&&ev.done);
+  $('#ltmf').style.display=fe(f,'cat').value==='ltm'?'':'none';$('#donef').style.display=fe(f,'cat').value==='ltm'?'none':'';$('#ederr').textContent='';
   $('#del').style.display=ev?'':'none';$('#del').textContent='삭제';
   $('#ed').showModal();fe(f,'title').focus();
 }
@@ -270,10 +289,12 @@ $('#edf').addEventListener('submit',e=>{e.preventDefault();const f=e.target,val=
   if(val('cat')==='plan'){o.cat='plan';if(old&&old.src==='plan')o.src='plan'}
   if(ltm)Object.assign(o,{cat:'ltm',status:val('status'),codes:val('codes'),dest:val('dest'),basis:val('basis')});
   if(old&&old.src==='ltm'&&ltm)o.src='ltm';
+  if(!ltm&&fe(f,'done').checked)o.done=true;
+  if(old&&old.src==='mem'&&val('cat')==='play'&&nk===k&&['title','time','place','who','note'].every(n=>(old[n]||'')===o[n])){o.src='mem';if(old.gone)o.gone=old.gone}
   if(id){S.events[w][k]=(S.events[w][k]||[]).filter(x=>x.id!==id);if(!S.events[w][k].length)delete S.events[w][k]}
   (S.events[w][nk]||(S.events[w][nk]=[])).push(o);
   $('#ed').close();if(nk!=='미정'){const p=nk.split('-').map(Number);Object.assign(V[w],{y:p[0],m:p[1],sel:nk})}commit()});
-$('#edf').addEventListener('change',e=>{if(e.target.name==='cat')$('#ltmf').style.display=e.target.value==='ltm'?'':'none'});
+$('#edf').addEventListener('change',e=>{if(e.target.name==='cat'){$('#ltmf').style.display=e.target.value==='ltm'?'':'none';$('#donef').style.display=e.target.value==='ltm'?'none':''}});
 function openSet(){
   const f=$('#sdf'),Fx=F(),M=S.modern;
   fe(f,'mDate').value=M.date;fe(f,'mTime').value=M.time||'';fe(f,'mWhere').value=M.where||'';
@@ -306,6 +327,8 @@ document.addEventListener('click',async e=>{
   else if(d.mode){V.mode=d.mode;render()}
   else if(d.cat){V.cat=d.cat;render()}
   else if(d.day){V[V.world].sel=d.day;render();if(innerWidth<900)$('.side')?.scrollIntoView({behavior:'smooth',block:'start'})}
+  else if(d.hide){V.hideDone=!V.hideDone;try{localStorage.setItem('daybook.hideDone',V.hideDone?'1':'0')}catch(x){}render()}
+  else if(d.fin){const ev=(S.events[V.world][d.k]||[]).find(x=>x.id===d.fin);if(ev){ev.done=true;commit()}}
   else if(d.edit)openEd(d.k,d.edit);
   else if(d.jump)goTo(d.jump);
   else if(t.id==='add')openEd(V[V.world].sel);

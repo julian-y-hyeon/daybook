@@ -99,3 +99,12 @@ h3.gh{margin:0;display:flex;align-items:center}
 .lg.c{background:color-mix(in srgb,var(--acc3) 45%,transparent)}
 .sun{display:block;font-size:13px;color:var(--mute);margin:2px 0 0;font-variant-numeric:tabular-nums;white-space:nowrap}
 .side .sun{margin-top:4px}
+.ev.gone{border-style:dashed;border-color:var(--acc)}
+.chip.gone{outline:1px dashed var(--acc);outline-offset:-1px}
+.tag.gone{color:var(--acc)}.tag.fin{color:var(--mute)}
+.lg.f{background:transparent;color:var(--mute);font-style:normal;font-size:12px;line-height:12px;text-align:center;width:auto}
+.lg.g{background:transparent;outline:1px dashed var(--acc);outline-offset:-1px}
+.btn.fin{min-height:36px;font-size:14px;padding:0 12px;margin:0 0 10px}
+.gonen{color:var(--acc);font-weight:600}
+.chk{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:15px}
+.chk input{width:22px;height:22px;min-height:0;padding:0;margin:0;accent-color:var(--acc)}
