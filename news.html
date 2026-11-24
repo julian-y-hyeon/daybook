@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko" style="visibility:hidden">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>신문</title>
+<link rel="stylesheet" href="css/news.css">
+</head>
+<body>
+<div class="wrap">
+ <header class="top">
+  <div class="brand">노르덴 뉴스</div>
+  <nav class="tabs" aria-label="분류"><span>홈</span><span class="on">뉴스</span><span>경제</span><span>가십</span><span>지역</span></nav>
+ </header>
+ <main id="feed"></main>
+ <article id="view" hidden></article>
+ <p class="st" id="st" aria-live="polite"></p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/news.js"></script>
+</body>
+</html>

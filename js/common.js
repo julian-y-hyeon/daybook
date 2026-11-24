@@ -54,11 +54,11 @@
   function nav() {
     const st = document.createElement('style'); st.textContent = NAV_CSS; document.head.appendChild(st);
     const n = document.createElement('nav'); n.className = 'dbnav'; n.setAttribute('aria-label', '메뉴');
-    n.innerHTML = '<a href="calendar.html" data-p="cal">캘린더</a><a href="phone.html#messages" data-p="msg">메시지</a><a href="phone.html#calls" data-p="call">최근 통화</a><span class="sp"></span><button type="button" id="dblogout">로그아웃</button>';
+    n.innerHTML = '<a href="calendar.html" data-p="cal">캘린더</a><a href="phone.html#messages" data-p="msg">메시지</a><a href="phone.html#calls" data-p="call">최근 통화</a><a href="news.html" data-p="news">신문</a><span class="sp"></span><button type="button" id="dblogout">로그아웃</button>';
     document.body.prepend(n);
     n.querySelector('#dblogout').addEventListener('click', logout);
     const mark = () => {
-      const page = location.pathname.endsWith('phone.html') ? (/^#(calls|rec-)/.test(location.hash) ? 'call' : 'msg') : 'cal';
+      const page = location.pathname.endsWith('news.html') ? 'news' : location.pathname.endsWith('phone.html') ? (/^#(calls|rec-)/.test(location.hash) ? 'call' : 'msg') : 'cal';
       for (const a of n.querySelectorAll('a')) a.classList.toggle('on', a.dataset.p === page);
     };
     mark(); addEventListener('hashchange', mark);
