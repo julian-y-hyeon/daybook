@@ -15,6 +15,19 @@ try {
  N = o;
 } catch (e) { $('#st').textContent = '불러오지 못했어요: ' + (e.message || e); }
 
+// 사진: news.json의 img를 Edge Function으로 받아 data 주소로 만든다
+const IMGS = {};
+function img(name) {
+ if (!IMGS[name]) {
+  const p = 'studio/daybook/news/' + name;
+  IMGS[name] = DB.readRepo([p]).then(r => r.files && r.files[p] ? 'data:image/webp;base64,' + r.files[p] : null).catch(() => null);
+ }
+ return IMGS[name];
+}
+async function fill(el, name) {
+ const u = await img(name);
+ if (u && el.isConnected) { el.style.backgroundImage = `url(${u})`; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center 25%'; el.classList.add('has'); }
+}
 const out = k => N.outlets[k] || { name: k, c: '#666' };
 const grad = c => `background:linear-gradient(150deg,${c} 0%,#1b1d22 115%)`;
 const logo = o => `<span class="logo" style="background:${esc(o.c)}">${esc(o.name.slice(0,2))}</span>`;
@@ -25,10 +38,11 @@ function feed() {
   if (!ids.length) return '';
   const L = N.articles[ids[0]];
   return `<section class="card"><div class="oh">${logo(o)}<b>${esc(o.name)}</b><span class="tm">· ${esc(g.tm)}</span><span class="sub">+구독</span></div>
-<a class="lead" href="#a-${esc(ids[0])}"><div class="ph" style="${grad(o.c)}"><span>${esc(L.photo || '')}</span></div><h2>${esc(L.title)}</h2></a>
+<a class="lead" href="#a-${esc(ids[0])}"><div class="ph" style="${grad(o.c)}"${L.img ? ` data-img="${esc(L.img)}"` : ''}><span>${esc(L.photo || '')}</span></div><h2>${esc(L.title)}</h2></a>
 ${ids.slice(1).map(id => `<a class="row" href="#a-${esc(id)}">${esc(N.articles[id].title)}</a>`).join('')}</section>`;
  }).join('');
  $('#feed').innerHTML = `<div class="sec"><h1>언론사별 소식</h1><small>${esc(N.now || '')}</small></div>` + (cards || '<p class="empty">아직 기사가 없어요.</p>');
+ for (const el of document.querySelectorAll('#feed .ph[data-img]')) fill(el, el.dataset.img);
 }
 
 function cmt(c, best) {
@@ -43,10 +57,11 @@ function view(id) {
 <div class="meta" style="border:0;padding:0">${logo(o)}<b style="color:var(--ink)">${esc(o.name)}</b></div>
 <div class="kick">${esc(a.sec || '')}</div><h1>${esc(a.title)}</h1>
 <div class="meta"><span>입력 2026. ${esc(a.tm)}</span></div>
-${a.photo ? `<div class="big" style="${grad(o.c)}"></div><p class="cap">${esc(a.photo)}</p>` : ''}
+${a.img ? `<div class="pic"><img alt="${esc(a.photo || '')}" hidden></div><p class="cap">${esc(a.photo || '')}</p>` : a.photo ? `<div class="big" style="${grad(o.c)}"></div><p class="cap">${esc(a.photo)}</p>` : ''}
 <div class="body">${(a.body || []).map(p => `<p>${esc(p)}</p>`).join('')}</div>
 <div class="cmh">댓글 <span>${total}</span></div>
 ${cms.map((c, i) => cmt(c, i < 2 && (c.up || 0) > (c.dn || 0) * 2 && (c.up || 0) >= 100)).join('')}`;
+ if (a.img) img(a.img).then(u => { const im = $('#view .pic img'); if (u && im) { im.src = u; im.hidden = false; } });
  $('#view .back').addEventListener('click', () => { location.hash = ''; });
 }
 
