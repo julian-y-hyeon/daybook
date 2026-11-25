@@ -5,16 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>신문</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;500;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/news.css">
 </head>
 <body>
-<div class="wrap">
- <header class="top">
-  <div class="brand">노르덴 뉴스</div>
-  <nav class="tabs" aria-label="분류"><span>홈</span><span class="on">뉴스</span><span>경제</span><span>가십</span><span>지역</span></nav>
- </header>
- <main id="feed"></main>
- <article id="view" hidden></article>
+<div class="page">
+ <header class="run" id="run"><span><b>노르덴 뉴스</b> 매거진</span></header>
+ <main id="main"></main>
+ <nav class="turn" id="turn" aria-label="쪽 넘기기"></nav>
  <p class="st" id="st" aria-live="polite"></p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
