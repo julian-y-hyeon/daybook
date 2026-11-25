@@ -35,6 +35,11 @@ body{background:var(--paper);color:var(--ink);font:16px/1.7 var(--text);overflow
 .feat figure{margin:0 0 28px}
 .feat figure img{display:block;width:100%;height:auto;max-height:560px;object-fit:cover;object-position:center 30%}
 .feat figcaption{font-size:12.5px;color:var(--ink2);padding-top:8px}
+/* 세로 사진: 왼쪽 단에 통째로, 오른쪽 단에 인용구와 본문 */
+.feat.tall .fbody{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:40px;align-items:start}
+.feat.tall figure{margin:0}
+.feat.tall figure img{max-height:none;object-fit:contain}
+.feat.tall .cols{grid-template-columns:1fr;gap:24px}
 .feat .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:40px;align-items:start}
 .pull{margin:0;font:500 clamp(1.3rem,2.4vw,1.75rem)/1.5 var(--display);color:var(--accent);padding-top:14px;border-top:3px solid var(--accent);word-break:keep-all}
 .pull::before{content:"“"}.pull::after{content:"”"}
@@ -70,6 +75,8 @@ body{background:var(--paper);color:var(--ink);font:16px/1.7 var(--text);overflow
 @media (max-width:760px){
  .open{grid-template-columns:1fr;gap:22px}
  .feat .cols{grid-template-columns:1fr;gap:22px}
+ .feat.tall .fbody{grid-template-columns:1fr;gap:0}
+ .feat.tall figure{margin-bottom:24px}
  .more{grid-template-columns:1fr}
  .more article,.more article:nth-last-child(-n+2):nth-child(odd){border-bottom:1px solid var(--hair)}
  .more article:last-child{border-bottom:0}

@@ -64,13 +64,17 @@ function render(k) {
 <article class="feat" id="a-${esc(fid)}">
  <p class="kick">${esc(f.sec || '')} · 특집</p>
  <h2>${esc(f.title)}</h2>
- ${f.img ? `<figure class="wait"><img alt="${esc(f.photo || '')}" hidden><figcaption>${esc(f.photo || '')}</figcaption></figure>` : ''}
- <div class="cols"><blockquote class="pull">${esc(pullOf(f))}</blockquote><div>${by(f)}${txt(f, /^[가-힣]/.test((f.body || [''])[0]))}</div></div>
+ <div class="fbody">${f.img ? `<figure class="wait"><img alt="${esc(f.photo || '')}" hidden><figcaption>${esc(f.photo || '')}</figcaption></figure>` : ''}
+ <div class="cols"><blockquote class="pull">${esc(pullOf(f))}</blockquote><div>${by(f)}${txt(f, /^[가-힣]/.test((f.body || [''])[0]))}</div></div></div>
 </article>
 ${rest.length ? `<section class="more">${rest.map(id => { const a = N.articles[id]; return `<article id="a-${esc(id)}"><p class="kick">${esc(a.sec || '')}</p><h3>${esc(a.title)}</h3>${by(a)}${txt(a)}</article>`; }).join('')}</section>` : ''}`;
  if (f.img) img(f.img).then(u => {
   const fig = $('#main .feat figure'); if (!fig || cur !== k) return;
-  if (u) { const im = fig.querySelector('img'); im.src = u; im.hidden = false; fig.classList.remove('wait'); } else fig.remove();
+  if (!u) { fig.remove(); return; }
+  // 세로 사진은 자르지 않고 왼쪽 단에 세운다
+  const im = fig.querySelector('img');
+  im.onload = () => { if (im.naturalHeight > im.naturalWidth) fig.closest('.feat').classList.add('tall'); fig.classList.remove('wait'); };
+  im.src = u; im.hidden = false;
  });
 
  const p = keys[i - 1], n = keys[i + 1];
