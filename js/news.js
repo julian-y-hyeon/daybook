@@ -55,7 +55,11 @@ function render(k) {
  const [m, d] = md(f.tm), wd = WD[new Date(YEAR, m - 1, d).getDay()];
  const i = keys.indexOf(k);
 
- $('#run').innerHTML = `<span><b>노르덴 뉴스</b> 매거진</span><span>제${i + 1}호 · ${YEAR}. ${m}. ${d}.</span>`;
+ const WDk = x => WD[new Date(YEAR, +x.slice(0, 2) - 1, +x.slice(2)).getDay()];
+ $('#run').innerHTML = `<span><b>노르덴 뉴스</b> 매거진</span><button type="button" class="pick" aria-expanded="false" aria-controls="picker">제${i + 1}호 · ${YEAR}. ${m}. ${d}. ▾</button>
+<ul class="picker" id="picker" hidden>${keys.map((x, j) => `<li><a href="#d${x}"${x === k ? ' aria-current="page"' : ''}><span>제${j + 1}호</span>${+x.slice(0, 2)}.${+x.slice(2)} ${WDk(x)}</a></li>`).join('')}</ul>`;
+ const btn = $('#run .pick'), list = $('#picker');
+ btn.addEventListener('click', e => { e.stopPropagation(); list.hidden = !list.hidden; btn.setAttribute('aria-expanded', String(!list.hidden)); });
  $('#main').innerHTML = `
 <section class="open">
  <div class="day"><small>${m}월 · ${wd}요일</small>${d}</div>
@@ -79,7 +83,6 @@ ${rest.length ? `<section class="more">${rest.map(id => { const a = N.articles[i
 
  const p = keys[i - 1], n = keys[i + 1];
  $('#turn').innerHTML = `<a class="pv ${p ? '' : 'off'}" href="#d${p || ''}">← ${p ? lab(p) : ''}</a>
-<div class="dots">${keys.map(x => `<a href="#d${x}" class="${x === k ? 'on' : ''}" aria-label="${lab(x)}">${+x.slice(2)}</a>`).join('')}</div>
 <a class="nx ${n ? '' : 'off'}" href="#d${n || ''}">${n ? lab(n) : ''} →</a>`;
 }
 
@@ -96,4 +99,8 @@ function show() {
 }
 show();
 addEventListener('hashchange', show);
+// 날짜 목록: 바깥을 누르거나 Esc면 닫는다
+const closePick = () => { const l = $('#picker'); if (l && !l.hidden) { l.hidden = true; $('#run .pick').setAttribute('aria-expanded', 'false'); } };
+document.addEventListener('click', e => { if (!e.target.closest('#picker')) closePick(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePick(); });
 })();
