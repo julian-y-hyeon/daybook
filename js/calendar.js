@@ -104,7 +104,7 @@ function applyBoard(o,keep){
   }
   const day=new Date(),today=`${day.getFullYear()}-${pad(day.getMonth()+1)}-${pad(day.getDate())}`;let gone=0;
   for(const x of old)if(!used.has(x)){if(!x.e.done){if(!x.e.gone)x.e.gone=today;gone++}put(x.k,x.e)}
-  V[w]=posOf(todayKey(w));if(!keep)V.world=w;
+  V[w]=posOf(todayKey(w));if(!keep&&w!==V.world){V.world=w;try{location.hash=w}catch(e){}}
   return `${w==='modern'?'현대':'판타지'}: ${label(w,todayKey(w))}${o.time?' '+o.time:''}, 일정 ${o.events.length}개, 매일 할 일 ${o.routines.length}개를 반영했어요.`+(gone?` 목록에서 빠진 일정 ${gone}개는 지우지 않고 남겨 뒀어요.`:'');
 }
 
@@ -229,8 +229,8 @@ function render(){
   const title=w==='modern'?`${P.y}년 ${P.m}월`:`${F().era} ${P.y}년 ${F().months[P.m-1][0]}`;
   const syn=[S.modern.synced&&'현대 '+S.modern.synced,S.fantasy.synced&&'판타지 '+S.fantasy.synced].filter(Boolean).join(', ');
   $('#app').innerHTML=`<div class="wrap">
-  <header class="top"><h1>볼프하임 캘린더</h1><div class="tabs" role="tablist">${['modern','fantasy'].map(x=>`<button role="tab" data-w="${x}" aria-selected="${x===w}">${x==='modern'?'현대':'판타지'}</button>`).join('')}</div></header>
-  <section class="today" aria-label="지금 이야기 날짜">${tcard('modern',w)}${tcard('fantasy',w)}</section>
+  <header class="top"><h1>볼프하임 캘린더</h1></header>
+  <section class="today one" aria-label="지금 이야기 날짜">${tcard(w,w)}</section>
   <p class="ghline" id="gh" aria-live="polite">${ghHTML()}</p>
   <div class="bar"><div class="nav"><button class="ic" data-nav="-1" aria-label="이전 달">‹</button><h2>${esc(title)}</h2><button class="ic" data-nav="1" aria-label="다음 달">›</button><button class="btn" data-nav="0">지금</button></div>
   <div class="seg"><button data-mode="cal" aria-pressed="${V.mode==='cal'}">달력</button><button data-mode="list" aria-pressed="${V.mode==='list'}">연표</button><button class="btn" id="set">설정·최근기억</button></div></div>

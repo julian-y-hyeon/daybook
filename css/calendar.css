@@ -17,6 +17,7 @@ h1{font:700 clamp(28px,4vw,40px)/1.05 var(--hd);margin:0;text-wrap:balance}
 .tabs button{border:0;background:none;color:var(--mute);font:600 15px/1 'IBM Plex Sans KR',sans-serif;padding:0 20px;border-radius:999px;cursor:pointer;min-height:44px}
 .tabs button[aria-selected=true]{background:var(--ink);color:var(--bg)}
 .today{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.today.one{grid-template-columns:minmax(0,1fr)}
 .tcard{border:1px solid var(--line);border-radius:14px;padding:14px 18px;background:var(--cell);cursor:pointer;display:flex;gap:14px;align-items:center;text-align:left;color:inherit;font:inherit}
 .tcard svg{flex:none;width:44px;height:44px}
 .tcard.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}

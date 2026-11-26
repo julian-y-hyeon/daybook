@@ -50,18 +50,32 @@
 .dbnav a,.dbnav button{color:#c9c9d1;text-decoration:none;padding:0 12px;min-height:36px;display:inline-flex;align-items:center;border-radius:999px;border:0;background:none;font:inherit;cursor:pointer;white-space:nowrap}
 .dbnav a.on{background:#f2f2f5;color:#16161a}
 .dbnav .sp{flex:1}
+.dbnav a.home{color:#8e8e99;padding-left:4px}
 .dbnav a:focus-visible,.dbnav button:focus-visible{outline:2px solid #7aa7ff;outline-offset:2px}`;
+  // 세계마다 메뉴가 다르다. 현대: 캘린더·문자·전화·기사, 판타지: 캘린더·편지
+  const MENUS = {
+    modern: [['calendar.html#modern', 'cal', '캘린더'], ['phone.html#messages', 'msg', '문자'], ['phone.html#calls', 'call', '전화'], ['news.html', 'news', '기사']],
+    fantasy: [['calendar.html#fantasy', 'cal', '캘린더'], ['letters.html', 'letter', '편지']]
+  };
+  function where() {
+    const p = location.pathname, h = location.hash;
+    if (p.endsWith('letters.html')) return ['fantasy', 'letter'];
+    if (p.endsWith('news.html')) return ['modern', 'news'];
+    if (p.endsWith('phone.html')) return ['modern', /^#(calls|rec-)/.test(h) ? 'call' : 'msg'];
+    return [h === '#fantasy' ? 'fantasy' : 'modern', 'cal'];
+  }
   function nav() {
     const st = document.createElement('style'); st.textContent = NAV_CSS; document.head.appendChild(st);
     const n = document.createElement('nav'); n.className = 'dbnav'; n.setAttribute('aria-label', '메뉴');
-    n.innerHTML = '<a href="calendar.html" data-p="cal">캘린더</a><a href="phone.html#messages" data-p="msg">메시지</a><a href="phone.html#calls" data-p="call">최근 통화</a><a href="news.html" data-p="news">신문</a><span class="sp"></span><button type="button" id="dblogout">로그아웃</button>';
     document.body.prepend(n);
-    n.querySelector('#dblogout').addEventListener('click', logout);
-    const mark = () => {
-      const page = location.pathname.endsWith('news.html') ? 'news' : location.pathname.endsWith('phone.html') ? (/^#(calls|rec-)/.test(location.hash) ? 'call' : 'msg') : 'cal';
-      for (const a of n.querySelectorAll('a')) a.classList.toggle('on', a.dataset.p === page);
+    const draw = () => {
+      const [w, page] = where();
+      n.innerHTML = `<a href="home.html" class="home" aria-label="처음으로, 지금 ${w === 'modern' ? '현대' : '판타지'}">‹ ${w === 'modern' ? '현대' : '판타지'}</a>` +
+        MENUS[w].map(([href, p, name]) => `<a href="${href}" data-p="${p}"${p === page ? ' class="on" aria-current="page"' : ''}>${name}</a>`).join('') +
+        '<span class="sp"></span><button type="button" id="dblogout">로그아웃</button>';
+      n.querySelector('#dblogout').addEventListener('click', logout);
     };
-    mark(); addEventListener('hashchange', mark);
+    draw(); addEventListener('hashchange', draw);
   }
 
   window.DB = { sb, requireLogin, loadDoc, saveDoc, readRepo, logout, nav };

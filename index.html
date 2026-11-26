@@ -34,7 +34,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--acc);outline-of
 <script>
 (async () => {
   const { data } = await DB.sb.auth.getSession();
-  if (data.session) location.replace('calendar.html');
+  if (data.session) location.replace('home.html');
   const f = document.getElementById('f'), err = document.getElementById('err');
   f.addEventListener('submit', async e => {
     e.preventDefault();
@@ -42,7 +42,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--acc);outline-of
     const { error } = await DB.sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.pw.value });
     b.disabled = false;
     if (error) { err.textContent = '로그인하지 못했어요. 이메일과 비밀번호를 확인해 주세요.'; return; }
-    location.replace('calendar.html');
+    location.replace('home.html');
   });
 })();
 </script>
