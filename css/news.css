@@ -10,7 +10,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,
 .top{position:sticky;top:52px;z-index:5;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:10px 16px 0}
 .brand{font-weight:800;color:var(--acc);font-size:17px;padding-bottom:10px;white-space:nowrap}
 .tabs{display:flex;gap:16px;overflow-x:auto;font-weight:600;font-size:16px}
-.tabs span{padding-bottom:10px;white-space:nowrap;color:var(--ink)}
+.tabs a{padding-bottom:10px;white-space:nowrap;color:var(--ink);text-decoration:none;font-variant-numeric:tabular-nums}
+.tabs a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .tabs .on{color:var(--acc);border-bottom:3px solid var(--acc)}
 .sec{background:var(--card);margin-top:10px;padding:14px 16px 4px;display:flex;justify-content:space-between;align-items:baseline}
 .sec h1{margin:0;font-size:20px}

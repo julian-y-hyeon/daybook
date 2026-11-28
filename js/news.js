@@ -33,9 +33,17 @@ const out = k => N.outlets[k] || { name: k, c: '#666' };
 const grad = c => `background:linear-gradient(150deg,${c} 0%,#1b1d22 115%)`;
 const logo = o => `<span class="logo" style="background:${esc(o.c)}">${esc(o.name.slice(0,2))}</span>`;
 
+const dk = tm => { const m = String(tm).match(/(\d+)월\s*(\d+)일/); return m ? String(m[1]).padStart(2, '0') + String(m[2]).padStart(2, '0') : ''; };
+const lab = k => +k.slice(0, 2) + '.' + +k.slice(2);
+const dset = new Set();
+for (const g of N.feed) for (const id of g.a || []) { const a = N.articles[id]; if (a && dk(a.tm)) dset.add(dk(a.tm)); }
+const keys = [...dset].sort().reverse();
+let day = keys[0] || '';
+
 function feed() {
+ $('#tabs').innerHTML = keys.map(k => `<a href="#d${k}"${k === day ? ' class="on" aria-current="page"' : ''}>${lab(k)}</a>`).join('');
  const cards = N.feed.map(g => {
-  const o = out(g.o), ids = (g.a || []).filter(id => N.articles[id]);
+  const o = out(g.o), ids = (g.a || []).filter(id => N.articles[id] && dk(N.articles[id].tm) === day);
   if (!ids.length) return '';
   const L = N.articles[ids[0]];
   return `<section class="card"><div class="oh">${logo(o)}<b>${esc(o.name)}</b><span class="tm">· ${esc(g.tm)}</span><span class="sub">+구독</span></div>
@@ -68,9 +76,11 @@ ${cms.map((c, i) => cmt(c, i < 2 && (c.up || 0) > (c.dn || 0) * 2 && (c.up || 0)
 
 let y = 0;
 function show() {
+ const d = location.hash.match(/^#d(\d{4})$/);
+ if (d && dset.has(d[1]) && d[1] !== day) { day = d[1]; y = 0; feed(); }
  const m = location.hash.match(/^#a-(.+)$/);
  const id = m && N.articles[decodeURIComponent(m[1])] ? decodeURIComponent(m[1]) : null;
- if (id) { y = scrollY; view(id); $('#feed').hidden = true; $('#view').hidden = false; scrollTo(0, 0); }
+ if (id) { const ak = dk(N.articles[id].tm); if (ak !== day) { day = ak; feed(); } y = scrollY; view(id); $('#feed').hidden = true; $('#view').hidden = false; scrollTo(0, 0); }
  else { $('#view').hidden = true; $('#feed').hidden = false; scrollTo(0, y); }
 }
 feed(); show();
